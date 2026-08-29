@@ -76,4 +76,4 @@ jobs:
             sleep 300
             echo "Backend still running..."
             curl -fsS http://localhost:8000/health || exit 1
-          done
+            done
