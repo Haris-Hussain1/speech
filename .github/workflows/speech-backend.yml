@@ -20,6 +20,7 @@ jobs:
           docker run -d \
             --name speech-backend \
             -p 8000:8000 \
+            -e ALLOWED_ORIGINS="https://speech-a.netlify.app,http://localhost:5173,http://127.0.0.1:5173" \
             speech-backend
 
       - name: Wait for backend
