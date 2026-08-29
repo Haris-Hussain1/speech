@@ -474,6 +474,22 @@ function AnalysisWorkspace({
 }: {
   analysis: SpeechAnalysisResult;
 }) {
+  const [expandedResultContent, setExpandedResultContent] = useState({
+    speakingRate: false,
+    pauses: false,
+    fillers: false,
+    quality: false,
+  });
+
+  const toggleResultContent = (
+    section: keyof typeof expandedResultContent,
+  ) => {
+    setExpandedResultContent((current) => ({
+      ...current,
+      [section]: !current[section],
+    }));
+  };
+
   return (
     <section className="animate-[fadeIn_420ms_ease-out] rounded-[1.75rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl motion-reduce:animate-none sm:p-7">
       <div className="flex flex-col gap-2 border-b border-white/10 pb-6">
@@ -489,8 +505,10 @@ function AnalysisWorkspace({
         </p>
       </div>
 
-      <div className="mt-8 grid gap-8 2xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="mt-8">
         <div className="min-w-0 space-y-10">
+          <TranscriptSection transcript={analysis.transcript} />
+
           <SectionBlock
             eyebrow="Core Metrics"
             title="Recording summary"
@@ -530,35 +548,41 @@ function AnalysisWorkspace({
             title="Speaking rate"
             description="Overall WPM uses the full recording. Speaking WPM uses only detected speaking time."
           >
-            <div className="grid gap-4 lg:grid-cols-3">
-              <MetricTile
-                label="Overall WPM"
-                value={analysis.overall_words_per_minute.toFixed(1)}
-                suffix="WPM"
-                description="Total words / recording duration"
-                tooltip="Total words divided by the complete recording duration, multiplied by 60."
-                tone="blue"
-              />
-              <MetricTile
-                label="Speaking WPM"
-                value={analysis.speaking_words_per_minute.toFixed(1)}
-                suffix="WPM"
-                description="Total words / speaking duration"
-                tooltip="Total words divided by detected speaking duration, multiplied by 60."
-                tone="cyan"
-              />
-              <div className="min-w-0 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-5">
-                <p className="text-sm font-medium text-cyan-200">
-                  Classification
-                </p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-white [overflow-wrap:anywhere]">
-                  {analysis.pace}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  Based on speaking WPM.
-                </p>
+            <ResultContentDisclosure
+              label="Speaking rate results"
+              isOpen={expandedResultContent.speakingRate}
+              onToggle={() => toggleResultContent("speakingRate")}
+            >
+              <div className="grid gap-4 lg:grid-cols-3">
+                <MetricTile
+                  label="Overall WPM"
+                  value={analysis.overall_words_per_minute.toFixed(1)}
+                  suffix="WPM"
+                  description="Total words / recording duration"
+                  tooltip="Total words divided by the complete recording duration, multiplied by 60."
+                  tone="blue"
+                />
+                <MetricTile
+                  label="Speaking WPM"
+                  value={analysis.speaking_words_per_minute.toFixed(1)}
+                  suffix="WPM"
+                  description="Total words / speaking duration"
+                  tooltip="Total words divided by detected speaking duration, multiplied by 60."
+                  tone="cyan"
+                />
+                <div className="min-w-0 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-5">
+                  <p className="text-sm font-medium text-cyan-200">
+                    Classification
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold tracking-tight text-white [overflow-wrap:anywhere]">
+                    {analysis.pace}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    Based on speaking WPM.
+                  </p>
+                </div>
               </div>
-            </div>
+            </ResultContentDisclosure>
           </SectionBlock>
 
           <SectionBlock
@@ -566,48 +590,54 @@ function AnalysisWorkspace({
             title="Speech and silence balance"
             description="Pause events are detected from gaps between consecutive recognized words."
           >
-            <SpeechSilenceBar
-              speechPercentage={analysis.speech_percentage}
-              silencePercentage={analysis.silence_percentage}
-            />
+            <ResultContentDisclosure
+              label="Pause results"
+              isOpen={expandedResultContent.pauses}
+              onToggle={() => toggleResultContent("pauses")}
+            >
+              <SpeechSilenceBar
+                speechPercentage={analysis.speech_percentage}
+                silencePercentage={analysis.silence_percentage}
+              />
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <MetricTile
-                label="Pause count"
-                value={analysis.pause_count.toString()}
-                description="Detected pauses"
-              />
-              <MetricTile
-                label="Average pause"
-                value={analysis.average_pause_duration.toFixed(2)}
-                suffix="sec"
-                description="Mean pause length"
-                tone="violet"
-              />
-              <MetricTile
-                label="Longest pause"
-                value={analysis.longest_pause_duration.toFixed(2)}
-                suffix="sec"
-                description="Largest gap"
-                tone="violet"
-              />
-              <MetricTile
-                label="Silence"
-                value={analysis.silence_percentage.toFixed(1)}
-                suffix="%"
-                description="Of recording"
-                tooltip="Silence duration divided by recording duration."
-                tone="blue"
-              />
-              <MetricTile
-                label="Speech"
-                value={analysis.speech_percentage.toFixed(1)}
-                suffix="%"
-                description="Of recording"
-                tooltip="Speaking duration divided by recording duration."
-                tone="cyan"
-              />
-            </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <MetricTile
+                  label="Pause count"
+                  value={analysis.pause_count.toString()}
+                  description="Detected pauses"
+                />
+                <MetricTile
+                  label="Average pause"
+                  value={analysis.average_pause_duration.toFixed(2)}
+                  suffix="sec"
+                  description="Mean pause length"
+                  tone="violet"
+                />
+                <MetricTile
+                  label="Longest pause"
+                  value={analysis.longest_pause_duration.toFixed(2)}
+                  suffix="sec"
+                  description="Largest gap"
+                  tone="violet"
+                />
+                <MetricTile
+                  label="Silence"
+                  value={analysis.silence_percentage.toFixed(1)}
+                  suffix="%"
+                  description="Of recording"
+                  tooltip="Silence duration divided by recording duration."
+                  tone="blue"
+                />
+                <MetricTile
+                  label="Speech"
+                  value={analysis.speech_percentage.toFixed(1)}
+                  suffix="%"
+                  description="Of recording"
+                  tooltip="Speaking duration divided by recording duration."
+                  tone="cyan"
+                />
+              </div>
+            </ResultContentDisclosure>
           </SectionBlock>
 
           <div className="grid gap-8 xl:grid-cols-2">
@@ -616,28 +646,34 @@ function AnalysisWorkspace({
               title="Hesitation markers"
               description="Filler detection identifies recognized hesitation expressions such as um, uh, like, and you know."
             >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MetricTile
-                  label="Filler word count"
-                  value={analysis.filler_word_count.toString()}
-                  description="Detected fillers"
-                />
-                <MetricTile
-                  label="Filler rate"
-                  value={analysis.filler_word_rate.toFixed(1)}
-                  suffix="%"
-                  description="Fillers / words"
-                  tooltip="Detected filler words divided by total recognized words."
-                  tone="violet"
-                />
-              </div>
-              <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-6 text-slate-300 [overflow-wrap:anywhere]">
-                {analysis.filler_word_count === 0
-                  ? "No filler words detected."
-                  : `${analysis.filler_word_count} filler word${
-                      analysis.filler_word_count === 1 ? "" : "s"
-                    } detected in the recognized transcript.`}
-              </p>
+              <ResultContentDisclosure
+                label="Filler results"
+                isOpen={expandedResultContent.fillers}
+                onToggle={() => toggleResultContent("fillers")}
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MetricTile
+                    label="Filler word count"
+                    value={analysis.filler_word_count.toString()}
+                    description="Detected fillers"
+                  />
+                  <MetricTile
+                    label="Filler rate"
+                    value={analysis.filler_word_rate.toFixed(1)}
+                    suffix="%"
+                    description="Fillers / words"
+                    tooltip="Detected filler words divided by total recognized words."
+                    tone="violet"
+                  />
+                </div>
+                <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-6 text-slate-300 [overflow-wrap:anywhere]">
+                  {analysis.filler_word_count === 0
+                    ? "No filler words detected."
+                    : `${analysis.filler_word_count} filler word${
+                        analysis.filler_word_count === 1 ? "" : "s"
+                      } detected in the recognized transcript.`}
+                </p>
+              </ResultContentDisclosure>
             </SectionBlock>
 
             <SectionBlock
@@ -645,35 +681,38 @@ function AnalysisWorkspace({
               title="Fluency indicator"
               description="A derived score from speaking pace, pauses, average pause duration, and filler-word rate."
             >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ScoreMeter score={analysis.fluency_score} />
-                <MetricTile
-                  label="Avg. word duration"
-                  value={analysis.average_word_duration.toFixed(2)}
-                  suffix="sec"
-                  description="Per recognized word"
-                  tooltip="Word duration is each word end timestamp minus start timestamp. This metric averages those durations."
-                  tone="blue"
-                />
-              </div>
-              <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-sm leading-6 text-slate-400">
-                This is an application metric, not a medical,
-                psychological, or definitive language assessment.
-              </p>
+              <ResultContentDisclosure
+                label="Quality results"
+                isOpen={expandedResultContent.quality}
+                onToggle={() => toggleResultContent("quality")}
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <ScoreMeter score={analysis.fluency_score} />
+                  <MetricTile
+                    label="Avg. word duration"
+                    value={analysis.average_word_duration.toFixed(2)}
+                    suffix="sec"
+                    description="Per recognized word"
+                    tooltip="Word duration is each word end timestamp minus start timestamp. This metric averages those durations."
+                    tone="blue"
+                  />
+                </div>
+                <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-sm leading-6 text-slate-400">
+                  This is an application metric, not a medical,
+                  psychological, or definitive language assessment.
+                </p>
+              </ResultContentDisclosure>
             </SectionBlock>
           </div>
 
-          <TranscriptSection transcript={analysis.transcript} />
           <WordTimeline words={analysis.words} />
           <PauseTimeline pauses={analysis.pauses} />
+          <TerminologyPanel />
         </div>
-
-        <TerminologyPanel />
       </div>
     </section>
   );
 }
-
 function EmptyAnalysisState({
   isRecording,
   hasAudio,
@@ -766,6 +805,54 @@ function SectionBlock({
   );
 }
 
+function ResultContentDisclosure({
+  label,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const contentId = `${label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")}-content`;
+
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+        onClick={onToggle}
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300/40 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-cyan-200"
+      >
+        <span>{isOpen ? "Hide" : "Show"} {label}</span>
+        <span
+          aria-hidden="true"
+          className={`text-base leading-none text-cyan-200 transition-transform duration-200 ${
+            isOpen ? "rotate-90" : ""
+          }`}
+        >
+          &rsaquo;
+        </span>
+      </button>
+
+      <div
+        id={contentId}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-4">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function MetricTile({
   label,
   value,
@@ -787,13 +874,47 @@ function MetricTile({
         tone,
       )}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className="min-w-0 text-sm font-medium leading-5 text-slate-400 [overflow-wrap:anywhere]">
-          {label}
-        </p>
-        {tooltip ? <InfoDot text={tooltip} /> : null}
-      </div>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-white [overflow-wrap:anywhere]">
+      <MetricTileContent
+        label={label}
+        value={value}
+        suffix={suffix}
+        description={description}
+        tooltip={tooltip}
+      />
+    </div>
+  );
+}
+
+function MetricTileContent({
+  label,
+  value,
+  suffix,
+  description,
+  tooltip,
+  showLabel = true,
+  valueClassName = "text-3xl font-semibold tracking-tight text-white",
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  description: string;
+  tooltip?: string;
+  showLabel?: boolean;
+  valueClassName?: string;
+}) {
+  return (
+    <>
+      {showLabel ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 text-sm font-medium leading-5 text-slate-400 [overflow-wrap:anywhere]">
+            {label}
+          </p>
+          {tooltip ? <InfoDot text={tooltip} /> : null}
+        </div>
+      ) : null}
+      <p
+        className={`mt-3 [overflow-wrap:anywhere] ${valueClassName}`}
+      >
         <span className="tabular-nums">{value}</span>
         {suffix ? (
           <span className="ml-1 align-baseline text-sm font-medium text-slate-400">
@@ -804,7 +925,12 @@ function MetricTile({
       <p className="mt-2 text-sm leading-6 text-slate-400 [overflow-wrap:anywhere]">
         {description}
       </p>
-    </div>
+      {!showLabel && tooltip ? (
+        <p className="mt-3 text-xs leading-5 text-slate-500 [overflow-wrap:anywhere]">
+          {tooltip}
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -860,7 +986,6 @@ function SpeechSilenceBar({
     </div>
   );
 }
-
 function ScoreMeter({ score }: { score: number }) {
   const clampedScore = clampPercentage(score);
 
@@ -1180,7 +1305,7 @@ function TimelineExplanation({
 
 function TerminologyPanel() {
   return (
-    <aside className="min-w-0 2xl:sticky 2xl:top-6 2xl:self-start">
+    <aside className="min-w-0">
       <details
         className="rounded-2xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-xl"
         open
