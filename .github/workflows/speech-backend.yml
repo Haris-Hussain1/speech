@@ -6,7 +6,6 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
-
     timeout-minutes: 360
 
     steps:
@@ -38,16 +37,40 @@ jobs:
           docker logs speech-backend
           exit 1
 
-      - name: Show backend status
+      - name: Install Cloudflare Tunnel
         run: |
-          docker ps
-          docker stats speech-backend --no-stream || true
-          docker logs --tail 50 speech-backend || true
+          curl -L --output cloudflared.deb \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+
+          sudo dpkg -i cloudflared.deb
+
+      - name: Start public tunnel
+        run: |
+          nohup cloudflared tunnel \
+            --url http://localhost:8000 \
+            > cloudflared.log 2>&1 &
+
+          for i in {1..30}; do
+            URL=$(grep -oE 'https://[-a-zA-Z0-9]+\.trycloudflare\.com' cloudflared.log | head -n 1 || true)
+
+            if [ -n "$URL" ]; then
+              echo "=========================================="
+              echo "PUBLIC BACKEND URL:"
+              echo "$URL"
+              echo "=========================================="
+              break
+            fi
+
+            sleep 2
+          done
+
+          cat cloudflared.log
 
       - name: Keep runner alive
         run: |
           echo "Speech Analyzer backend is running."
           echo "Runner will remain alive for the workflow duration."
+
           while true; do
             sleep 300
             echo "Backend still running..."
