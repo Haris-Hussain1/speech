@@ -1,0 +1,55 @@
+name: Speech Backend
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: docker build -t speech-backend ./backend
+
+      - name: Start backend
+        run: |
+          docker run -d \
+            --name speech-backend \
+            -p 8000:8000 \
+            speech-backend
+
+      - name: Wait for backend
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:8000/health; then
+              echo "Backend is healthy."
+              exit 0
+            fi
+            echo "Waiting for backend..."
+            sleep 5
+          done
+
+          echo "Backend failed to start."
+          docker logs speech-backend
+          exit 1
+
+      - name: Show backend status
+        run: |
+          docker ps
+          docker stats speech-backend --no-stream || true
+          docker logs --tail 50 speech-backend || true
+
+      - name: Keep runner alive
+        run: |
+          echo "Speech Analyzer backend is running."
+          echo "Runner will remain alive for the workflow duration."
+          while true; do
+            sleep 300
+            echo "Backend still running..."
+            curl -fsS http://localhost:8000/health || exit 1
+          done
