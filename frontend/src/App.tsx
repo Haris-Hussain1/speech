@@ -8,6 +8,7 @@ import {
   analyzeSpeech,
   type SpeechAnalysisResult,
 } from "./api/speech";
+import { downloadSpeechAnalysisPdf } from "./utils/speechReportPdf";
 
 type RecordingStatus =
   | "idle"
@@ -268,13 +269,20 @@ function App() {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between gap-4 py-4">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
-              Speech Analyzer
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white [overflow-wrap:anywhere] sm:text-3xl">
-              Professional speech clarity workspace
-            </h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src="/logos/logo.png"
+              alt="Learnova logo"
+              className="h-12 w-12 shrink-0 rounded-xl object-contain"
+            />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold tracking-tight text-white [overflow-wrap:anywhere] sm:text-3xl">
+                Learnova AI Speech Analyzer
+              </h1>
+              <p className="mt-1 text-sm font-normal text-slate-300 [overflow-wrap:anywhere] sm:text-base">
+                Professional speech clarity workspace
+              </p>
+            </div>
           </div>
 
           <StatusBadge status={status} isAnalyzing={isAnalyzing} />
@@ -474,6 +482,8 @@ function AnalysisWorkspace({
 }: {
   analysis: SpeechAnalysisResult;
 }) {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [expandedResultContent, setExpandedResultContent] = useState({
     speakingRate: false,
     pauses: false,
@@ -490,15 +500,50 @@ function AnalysisWorkspace({
     }));
   };
 
+  const handleDownloadPdf = async () => {
+    setPdfError(null);
+    setIsGeneratingPdf(true);
+
+    try {
+      await downloadSpeechAnalysisPdf(analysis);
+    } catch (error) {
+      console.error(error);
+      setPdfError("PDF could not be generated. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <section className="animate-[fadeIn_420ms_ease-out] rounded-[1.75rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl motion-reduce:animate-none sm:p-7">
       <div className="flex flex-col gap-2 border-b border-white/10 pb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
-          Analysis
-        </p>
-        <h2 className="text-3xl font-semibold tracking-tight text-white">
-          Speech Results
-        </h2>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
+              Analysis
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight text-white">
+              Speech Results
+            </h2>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              aria-label="Download speech analysis report as PDF"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 disabled:cursor-wait disabled:opacity-60"
+            >
+              <span aria-hidden="true">{isGeneratingPdf ? "..." : "↓"}</span>
+              {isGeneratingPdf ? "Generating PDF" : "Download PDF"}
+            </button>
+            {pdfError ? (
+              <p className="max-w-52 text-right text-xs text-red-600" role="alert">
+                {pdfError}
+              </p>
+            ) : null}
+          </div>
+        </div>
         <p className="max-w-2xl text-sm leading-6 text-slate-300">
           Metrics below come directly from the speech-analysis.
           Words are counted once from the recognized word timeline.
