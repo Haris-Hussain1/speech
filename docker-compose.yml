@@ -1,0 +1,42 @@
+services:
+  translator:
+    build: ./translator
+    expose:
+      - "8001"
+    environment:
+      STT_MODEL_DIRECTORY: /models/stt
+      TRANSLATION_MODEL_DIRECTORY: /models/translation
+    volumes:
+      - translator-model-cache:/models
+    cpus: 2.0
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  backend:
+    build: ./backend
+    ports:
+      - "8002:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      TRANSLATOR_SERVICE_URL: http://translator:8001
+    depends_on:
+      translator:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8002}
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+
+volumes:
+  translator-model-cache:

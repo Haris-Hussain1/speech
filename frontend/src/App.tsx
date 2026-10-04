@@ -9,6 +9,8 @@ import {
   type SpeechAnalysisResult,
 } from "./api/speech";
 import { downloadSpeechAnalysisPdf } from "./utils/speechReportPdf";
+import { TranslatorWorkspace } from "./components/TranslatorWorkspace";
+import { WelcomeScreen } from "./components/WelcomeScreen";
 
 type RecordingStatus =
   | "idle"
@@ -20,6 +22,9 @@ type RecordingStatus =
 type MetricTone = "cyan" | "violet" | "blue" | "neutral";
 
 function App() {
+  const [mode, setMode] = useState<"welcome" | "analyzer" | "translator">(
+    "welcome",
+  );
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [elapsedTime, setElapsedTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -263,6 +268,31 @@ function App() {
     setStatus("idle");
   };
 
+  if (mode === "welcome") {
+    return (
+      <main className="min-h-screen overflow-x-hidden bg-[#060914] text-slate-100">
+        <div className="pointer-events-none fixed inset-0 [background:radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.16),transparent_32rem),radial-gradient(circle_at_80%_0%,rgba(124,58,237,0.16),transparent_30rem),linear-gradient(180deg,#060914_0%,#0b1020_52%,#080b14_100%)]" />
+        <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+          <WelcomeScreen
+            onSelectAnalyzer={() => setMode("analyzer")}
+            onSelectTranslator={() => setMode("translator")}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  if (mode === "translator") {
+    return (
+      <main className="min-h-screen overflow-x-hidden bg-[#060914] text-slate-100">
+        <div className="pointer-events-none fixed inset-0 [background:radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.16),transparent_32rem),radial-gradient(circle_at_80%_0%,rgba(124,58,237,0.16),transparent_30rem),linear-gradient(180deg,#060914_0%,#0b1020_52%,#080b14_100%)]" />
+        <div className="relative mx-auto min-h-screen w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <TranslatorWorkspace onBack={() => setMode("welcome")} />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#060914] text-slate-100">
       <div className="pointer-events-none fixed inset-0 [background:radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.16),transparent_32rem),radial-gradient(circle_at_80%_0%,rgba(124,58,237,0.16),transparent_30rem),linear-gradient(180deg,#060914_0%,#0b1020_52%,#080b14_100%)]" />
@@ -285,7 +315,16 @@ function App() {
             </div>
           </div>
 
-          <StatusBadge status={status} isAnalyzing={isAnalyzing} />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMode("welcome")}
+              className="text-right text-xs font-medium text-slate-300 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:text-sm"
+            >
+              Switch workspace
+            </button>
+            <StatusBadge status={status} isAnalyzing={isAnalyzing} />
+          </div>
         </header>
 
         <section className="grid flex-1 items-start gap-6 py-6 lg:grid-cols-[21rem_minmax(0,1fr)] lg:py-10">

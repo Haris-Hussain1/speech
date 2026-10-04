@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.speech import router as speech_router
+from app.api.routes.translation import router as translation_router
 
 
 load_dotenv()
@@ -33,6 +34,7 @@ app.add_middleware(
 )
 
 app.include_router(speech_router)
+app.include_router(translation_router)
 
 
 @app.get("/health")
