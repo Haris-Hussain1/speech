@@ -35,6 +35,18 @@ MODELS = {
             "translate.py",
         ),
     ),
+    "grammar_correction": (
+        "anmol-unitmole/grammar-correction-flan-t5-base",
+        (
+            "config.json",
+            "generation_config.json",
+            "model.safetensors",
+            "special_tokens_map.json",
+            "spiece.model",
+            "tokenizer.json",
+            "tokenizer_config.json",
+        ),
+    ),
 }
 
 

@@ -16,9 +16,6 @@ export function WelcomeScreen({
             alt="Learnova logo"
             className="mx-auto h-16 w-16 rounded-2xl object-contain"
           />
-          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-200">
-            Speak1
-          </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white sm:text-5xl">
             Welcome to Speech Analyzer and Translator Tool
           </h1>

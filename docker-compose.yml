@@ -6,6 +6,7 @@ services:
     environment:
       STT_MODEL_DIRECTORY: /models/stt
       TRANSLATION_MODEL_DIRECTORY: /models/translation
+      GRAMMAR_MODEL_DIRECTORY: /models/grammar_correction
     volumes:
       - translator-model-cache:/models
     cpus: 2.0

@@ -10,6 +10,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.services.stt import UrduSttService
 from app.services.translation import UrduEnglishTranslationService
+from app.services.grammar_correction import GrammarCorrectionService
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,15 @@ async def lifespan(app: FastAPI):
         app.state.translation = UrduEnglishTranslationService(
             os.getenv("TRANSLATION_MODEL_DIRECTORY", "/models/translation")
         )
+        try:
+            app.state.grammar_correction = GrammarCorrectionService(
+                os.getenv("GRAMMAR_MODEL_DIRECTORY", "/models/grammar_correction")
+            )
+        except Exception:
+            logger.exception(
+                "Grammar correction unavailable; the original translation will be returned."
+            )
+            app.state.grammar_correction = None
     except Exception:
         logger.exception("Translator model initialization failed")
         raise
@@ -70,6 +80,11 @@ async def translate(
                 request.app.state.translation.translate,
                 urdu_transcript,
             )
+            if request.app.state.grammar_correction is not None:
+                english_translation = await run_in_threadpool(
+                    request.app.state.grammar_correction.correct_or_original,
+                    english_translation,
+                )
 
         return {
             "urdu_transcript": urdu_transcript,
